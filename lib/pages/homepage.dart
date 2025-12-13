@@ -30,7 +30,7 @@ class _DashboardPageState extends State<DashboardPage> {
   String userName = "Loading...";
   String userRole = "Employee";
   String userEmail = "";
-// sdfsd
+  // sdfsd
   // Time Info
   String clockInTime = "--:--";
   String clockOutTime = "--:--";
@@ -80,7 +80,7 @@ class _DashboardPageState extends State<DashboardPage> {
       if (userStr != null) {
         final user = jsonDecode(userStr);
         final userId = user['id'];
-        
+
         setState(() {
           userName = "${user['firstName']} ${user['lastName']}";
           userEmail = user['email'];
@@ -100,36 +100,37 @@ class _DashboardPageState extends State<DashboardPage> {
           print("RAW ATTENDANCE DATA: $attendance"); // DEBUG LOG
 
           if (attendance != null) {
-             String? date = attendance['date'];
-             String? checkInStr = attendance['checkInTime'];
-             String? checkOutStr = attendance['checkOutTime'];
-             
-             print("ID: ${attendance['id']}"); // DEBUG LOG
-             print("Date: $date, CheckIn: $checkInStr, CheckOut: $checkOutStr"); // DEBUG LOG
+            String? date = attendance['date'];
+            String? checkInStr = attendance['checkInTime'];
+            String? checkOutStr = attendance['checkOutTime'];
 
-             DateTime? checkIn = _parseUtcTime(date, checkInStr);
-             DateTime? checkOut = _parseUtcTime(date, checkOutStr);
+            print("ID: ${attendance['id']}"); // DEBUG LOG
+            print(
+              "Date: $date, CheckIn: $checkInStr, CheckOut: $checkOutStr",
+            ); // DEBUG LOG
 
-             setState(() {
-               if (checkIn != null) {
-                 clockInTime = DateFormat('HH:mm').format(checkIn);
-               }
-               if (checkOut != null) {
-                 clockOutTime = DateFormat('HH:mm').format(checkOut);
-                 attendanceStatus = "Completed";
-                 
-                 // Calculate working hours
-                 final duration = checkOut.difference(checkIn!);
-                 final hours = duration.inHours;
-                 final minutes = duration.inMinutes.remainder(60);
-                 workingHours = "${hours}h ${minutes}m";
+            DateTime? checkIn = _parseUtcTime(date, checkInStr);
+            DateTime? checkOut = _parseUtcTime(date, checkOutStr);
 
-               } else {
-                 attendanceStatus = "Clock-Out";
-                 attendanceId = attendance['id'];
-                 print("Set attendanceId to $attendanceId"); // DEBUG LOG
-               }
-             });
+            setState(() {
+              if (checkIn != null) {
+                clockInTime = DateFormat('HH:mm').format(checkIn);
+              }
+              if (checkOut != null) {
+                clockOutTime = DateFormat('HH:mm').format(checkOut);
+                attendanceStatus = "Completed";
+
+                // Calculate working hours
+                final duration = checkOut.difference(checkIn!);
+                final hours = duration.inHours;
+                final minutes = duration.inMinutes.remainder(60);
+                workingHours = "${hours}h ${minutes}m";
+              } else {
+                attendanceStatus = "Clock-Out";
+                attendanceId = attendance['id'];
+                print("Set attendanceId to $attendanceId"); // DEBUG LOG
+              }
+            });
           } else {
             setState(() {
               attendanceStatus = "Clock-In";
@@ -242,11 +243,19 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                             const SizedBox(height: 15),
                             GestureDetector(
-                              onTap: () => {
+                              onTap: () {
+                                if (attendanceStatus == "Completed") {
+                                  showSnack(
+                                    "Attendance already completed for today",
+                                  );
+                                  return;
+                                }
+
                                 setState(() {
-                                  isPopUpVisible = !isPopUpVisible;
-                                }),
+                                  isPopUpVisible = true;
+                                });
                               },
+
                               child: Container(
                                 padding: const EdgeInsets.all(25),
                                 decoration: BoxDecoration(
@@ -259,10 +268,21 @@ class _DashboardPageState extends State<DashboardPage> {
                                     ),
                                   ],
                                 ),
-                                child: const Icon(
-                                  Iconsax.finger_scan,
-                                  size: 40,
-                                  color: Colors.orange,
+                                child: Opacity(
+                                  opacity: attendanceStatus == "Completed"
+                                      ? 0.5
+                                      : 1,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Icon(
+                                      Iconsax.finger_scan,
+                                      size: 40,
+                                      color: Colors.orange,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -368,22 +388,28 @@ class _DashboardPageState extends State<DashboardPage> {
                       else
                         ...activityHistory.take(5).map((activity) {
                           final date = activity['date'];
-                          final checkIn = _parseUtcTime(date, activity['checkInTime']);
-                          final checkOut = _parseUtcTime(date, activity['checkOutTime']);
-                          
+                          final checkIn = _parseUtcTime(
+                            date,
+                            activity['checkInTime'],
+                          );
+                          final checkOut = _parseUtcTime(
+                            date,
+                            activity['checkOutTime'],
+                          );
+
                           return Column(
                             children: [
                               if (checkIn != null)
                                 activityItem(
-                                  "Clock-In", 
-                                  DateFormat('dd MMMM yyyy').format(checkIn), 
-                                  DateFormat('HH:mm').format(checkIn)
+                                  "Clock-In",
+                                  DateFormat('dd MMMM yyyy').format(checkIn),
+                                  DateFormat('HH:mm').format(checkIn),
                                 ),
                               if (checkOut != null)
                                 activityItem(
-                                  "Clock-Out", 
-                                  DateFormat('dd MMMM yyyy').format(checkOut), 
-                                  DateFormat('HH:mm').format(checkOut)
+                                  "Clock-Out",
+                                  DateFormat('dd MMMM yyyy').format(checkOut),
+                                  DateFormat('HH:mm').format(checkOut),
                                 ),
                             ],
                           );
