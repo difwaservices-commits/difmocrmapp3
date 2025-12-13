@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_application_difmo/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -25,10 +26,34 @@ class _DashboardPageState extends State<DashboardPage> {
   String? employeeId;
   bool isLoading = true;
 
+  // User Data
+  String userName = "Loading...";
+  String userRole = "Employee";
+  String userEmail = "";
+
+  // Time Info
+  String clockInTime = "--:--";
+  String clockOutTime = "--:--";
+  String workingHours = "--h --m";
+  String currentDate = "";
+  String currentTime = "";
+
+  // Activity History
+  List<dynamic> activityHistory = [];
+
   @override
   void initState() {
     super.initState();
+    _updateDateTime();
     _fetchAttendanceStatus();
+  }
+
+  void _updateDateTime() {
+    final now = DateTime.now();
+    setState(() {
+      currentDate = DateFormat('EEEE, dd MMMM').format(now);
+      currentTime = DateFormat('HH:mm').format(now);
+    });
   }
 
   Future<void> _fetchAttendanceStatus() async {
@@ -39,33 +64,63 @@ class _DashboardPageState extends State<DashboardPage> {
         final user = jsonDecode(userStr);
         final userId = user['id'];
         
+        setState(() {
+          userName = "${user['firstName']} ${user['lastName']}";
+          userEmail = user['email'];
+          // userRole = user['roles'] ... (if available)
+        });
+
         // Get employee record
         final employees = await ApiService.getEmployees(userId: userId);
         if (employees.isNotEmpty) {
           final employee = employees[0];
           setState(() {
             employeeId = employee['id'];
+            userRole = employee['role'] ?? "Employee";
           });
 
           // Get today's attendance
           final attendance = await ApiService.getTodayAttendance(employeeId!);
           
           if (attendance != null) {
-             if (attendance['checkOutTime'] != null) {
-               setState(() {
+             String? checkIn = attendance['checkInTime'];
+             String? checkOut = attendance['checkOutTime'];
+
+             setState(() {
+               if (checkIn != null) {
+                 clockInTime = DateFormat('HH:mm').format(DateTime.parse(checkIn).toLocal());
+               }
+               if (checkOut != null) {
+                 clockOutTime = DateFormat('HH:mm').format(DateTime.parse(checkOut).toLocal());
                  attendanceStatus = "Completed";
-               });
-             } else {
-               setState(() {
+                 
+                 // Calculate working hours
+                 final start = DateTime.parse(checkIn!);
+                 final end = DateTime.parse(checkOut);
+                 final duration = end.difference(start);
+                 final hours = duration.inHours;
+                 final minutes = duration.inMinutes.remainder(60);
+                 workingHours = "${hours}h ${minutes}m";
+
+               } else {
                  attendanceStatus = "Clock-Out";
                  attendanceId = attendance['id'];
-               });
-             }
+               }
+             });
           } else {
             setState(() {
               attendanceStatus = "Clock-In";
+              clockInTime = "--:--";
+              clockOutTime = "--:--";
+              workingHours = "--h --m";
             });
           }
+
+          // Get Activity History
+          final history = await ApiService.getAttendanceHistory(employeeId!);
+          setState(() {
+            activityHistory = history;
+          });
         }
       }
     } catch (e) {
@@ -116,18 +171,18 @@ class _DashboardPageState extends State<DashboardPage> {
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
+                            children: [
                               Text(
-                                "Ranjeet_Arya",
-                                style: TextStyle(
+                                userName,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                "Android_Developer",
-                                style: TextStyle(
+                                userRole,
+                                style: const TextStyle(
                                   fontSize: 13,
                                   color: Colors.white70,
                                 ),
@@ -150,17 +205,17 @@ class _DashboardPageState extends State<DashboardPage> {
                       Center(
                         child: Column(
                           children: [
-                            const Text(
-                              "07:40",
-                              style: TextStyle(
+                            Text(
+                              currentTime,
+                              style: const TextStyle(
                                 fontSize: 38,
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const Text(
-                              "Monday, 01 November",
-                              style: TextStyle(color: Colors.white70),
+                            Text(
+                              currentDate,
+                              style: const TextStyle(color: Colors.white70),
                             ),
                             const SizedBox(height: 15),
                             GestureDetector(
@@ -205,10 +260,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       // Time Info
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: const [
-                          TimeInfo(title: "Clock-In", time: "07:40"),
-                          TimeInfo(title: "Clock-Out", time: "16:40"),
-                          TimeInfo(title: "Working Hrs", time: "09h00m"),
+                        children: [
+                          TimeInfo(title: "Clock-In", time: clockInTime),
+                          TimeInfo(title: "Clock-Out", time: clockOutTime),
+                          TimeInfo(title: "Working Hrs", time: workingHours),
                         ],
                       ),
                     ],
@@ -285,10 +340,34 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      activityItem("Clock-In", "01 November 2023", "07:30"),
-                      activityItem("Clock-Out", "01 November 2023", "16:30"),
-                      activityItem("Clock-In", "31 September 2023", "07:30"),
-                      activityItem("Clock-Out", "31 September 2023", "16:30"),
+                      if (activityHistory.isEmpty)
+                        const Text("No activity history found.")
+                      else
+                        ...activityHistory.take(5).map((activity) {
+                          final checkIn = activity['checkInTime'] != null 
+                              ? DateTime.parse(activity['checkInTime']).toLocal() 
+                              : null;
+                          final checkOut = activity['checkOutTime'] != null 
+                              ? DateTime.parse(activity['checkOutTime']).toLocal() 
+                              : null;
+                          
+                          return Column(
+                            children: [
+                              if (checkIn != null)
+                                activityItem(
+                                  "Clock-In", 
+                                  DateFormat('dd MMMM yyyy').format(checkIn), 
+                                  DateFormat('HH:mm').format(checkIn)
+                                ),
+                              if (checkOut != null)
+                                activityItem(
+                                  "Clock-Out", 
+                                  DateFormat('dd MMMM yyyy').format(checkOut), 
+                                  DateFormat('HH:mm').format(checkOut)
+                                ),
+                            ],
+                          );
+                        }).toList(),
                     ],
                   ),
                 ),

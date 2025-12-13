@@ -231,4 +231,33 @@ class ApiService {
       throw Exception('Get employees error: $e');
     }
   }
+
+  static Future<List<dynamic>> getAttendanceHistory(String employeeId) async {
+    final url = Uri.parse('$baseUrl/attendance?employeeId=$employeeId');
+    final headers = await _getHeaders();
+
+    _logRequest('GET', url, headers: headers);
+
+    try {
+      final response = await http.get(url, headers: headers);
+
+      _logResponse('GET', url, response);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        var innerData = responseData['data'];
+        
+        if (innerData is List) return innerData;
+        if (innerData is Map && innerData.containsKey('data') && innerData['data'] is List) {
+           return innerData['data'];
+        }
+        return [];
+      } else {
+        throw Exception('Failed to fetch attendance history');
+      }
+    } catch (e) {
+      print('❌ [API ERROR] getAttendanceHistory: $e');
+      return [];
+    }
+  }
 }
