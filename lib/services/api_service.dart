@@ -184,8 +184,15 @@ class ApiService {
       _logResponse('GET', url, response);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['data']; // Assuming response structure { data: ... }
+        final responseData = jsonDecode(response.body);
+        var innerData = responseData['data'];
+
+        // Handle nested response structure: {"data": {"data": ...}}
+        if (innerData is Map<String, dynamic> && innerData.containsKey('data')) {
+          return innerData['data'];
+        }
+
+        return innerData;
       } else {
         return null;
       }
