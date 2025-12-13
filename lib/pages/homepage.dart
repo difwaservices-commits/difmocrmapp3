@@ -57,13 +57,16 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   DateTime? _parseUtcTime(String? dateStr, String? timeStr) {
+    // debugPrint("Parsing time: date=$dateStr, time=$timeStr");
     if (dateStr == null || timeStr == null) return null;
     try {
       // Ensure date is YYYY-MM-DD
       final datePart = dateStr.contains('T') ? dateStr.split('T')[0] : dateStr;
       // Construct ISO UTC string
       final isoStr = "${datePart}T${timeStr}Z";
-      return DateTime.parse(isoStr).toLocal();
+      final dt = DateTime.parse(isoStr).toLocal();
+      // debugPrint("Parsed $isoStr to $dt");
+      return dt;
     } catch (e) {
       print("Error parsing time: $e");
       return null;
@@ -94,11 +97,15 @@ class _DashboardPageState extends State<DashboardPage> {
 
           // Get today's attendance
           final attendance = await ApiService.getTodayAttendance(employeeId!);
-          
+          print("RAW ATTENDANCE DATA: $attendance"); // DEBUG LOG
+
           if (attendance != null) {
              String? date = attendance['date'];
              String? checkInStr = attendance['checkInTime'];
              String? checkOutStr = attendance['checkOutTime'];
+             
+             print("ID: ${attendance['id']}"); // DEBUG LOG
+             print("Date: $date, CheckIn: $checkInStr, CheckOut: $checkOutStr"); // DEBUG LOG
 
              DateTime? checkIn = _parseUtcTime(date, checkInStr);
              DateTime? checkOut = _parseUtcTime(date, checkOutStr);
@@ -120,6 +127,7 @@ class _DashboardPageState extends State<DashboardPage> {
                } else {
                  attendanceStatus = "Clock-Out";
                  attendanceId = attendance['id'];
+                 print("Set attendanceId to $attendanceId"); // DEBUG LOG
                }
              });
           } else {
@@ -139,7 +147,7 @@ class _DashboardPageState extends State<DashboardPage> {
         }
       }
     } catch (e) {
-      // debugPrint("Error fetching attendance: $e");
+      print("Error fetching attendance: $e");
     } finally {
       setState(() {
         isLoading = false;
