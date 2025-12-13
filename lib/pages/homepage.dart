@@ -56,6 +56,20 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
+  DateTime? _parseUtcTime(String? dateStr, String? timeStr) {
+    if (dateStr == null || timeStr == null) return null;
+    try {
+      // Ensure date is YYYY-MM-DD
+      final datePart = dateStr.contains('T') ? dateStr.split('T')[0] : dateStr;
+      // Construct ISO UTC string
+      final isoStr = "${datePart}T${timeStr}Z";
+      return DateTime.parse(isoStr).toLocal();
+    } catch (e) {
+      print("Error parsing time: $e");
+      return null;
+    }
+  }
+
   Future<void> _fetchAttendanceStatus() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -67,7 +81,6 @@ class _DashboardPageState extends State<DashboardPage> {
         setState(() {
           userName = "${user['firstName']} ${user['lastName']}";
           userEmail = user['email'];
-          // userRole = user['roles'] ... (if available)
         });
 
         // Get employee record
@@ -83,21 +96,23 @@ class _DashboardPageState extends State<DashboardPage> {
           final attendance = await ApiService.getTodayAttendance(employeeId!);
           
           if (attendance != null) {
-             String? checkIn = attendance['checkInTime'];
-             String? checkOut = attendance['checkOutTime'];
+             String? date = attendance['date'];
+             String? checkInStr = attendance['checkInTime'];
+             String? checkOutStr = attendance['checkOutTime'];
+
+             DateTime? checkIn = _parseUtcTime(date, checkInStr);
+             DateTime? checkOut = _parseUtcTime(date, checkOutStr);
 
              setState(() {
                if (checkIn != null) {
-                 clockInTime = DateFormat('HH:mm').format(DateTime.parse(checkIn).toLocal());
+                 clockInTime = DateFormat('HH:mm').format(checkIn);
                }
                if (checkOut != null) {
-                 clockOutTime = DateFormat('HH:mm').format(DateTime.parse(checkOut).toLocal());
+                 clockOutTime = DateFormat('HH:mm').format(checkOut);
                  attendanceStatus = "Completed";
                  
                  // Calculate working hours
-                 final start = DateTime.parse(checkIn!);
-                 final end = DateTime.parse(checkOut);
-                 final duration = end.difference(start);
+                 final duration = checkOut.difference(checkIn!);
                  final hours = duration.inHours;
                  final minutes = duration.inMinutes.remainder(60);
                  workingHours = "${hours}h ${minutes}m";
@@ -344,12 +359,9 @@ class _DashboardPageState extends State<DashboardPage> {
                         const Text("No activity history found.")
                       else
                         ...activityHistory.take(5).map((activity) {
-                          final checkIn = activity['checkInTime'] != null 
-                              ? DateTime.parse(activity['checkInTime']).toLocal() 
-                              : null;
-                          final checkOut = activity['checkOutTime'] != null 
-                              ? DateTime.parse(activity['checkOutTime']).toLocal() 
-                              : null;
+                          final date = activity['date'];
+                          final checkIn = _parseUtcTime(date, activity['checkInTime']);
+                          final checkOut = _parseUtcTime(date, activity['checkOutTime']);
                           
                           return Column(
                             children: [
