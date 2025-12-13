@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -202,9 +203,7 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
         ).showSnackBar(SnackBar(content: Text(next.message ?? "Success")));
         Navigator.pop(context);
       } else if (next.status == ApiStatus.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.message ?? "An error occurred")),
-        );
+        _showErrorDialog(context, next.message ?? "An error occurred");
       }
     });
 
@@ -326,6 +325,59 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
                     ],
                   ),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String rawMessage) {
+    String displayMessage = rawMessage;
+
+    // 1. Try to parse if it's JSON inside the exception string
+    // Standardize: Remove "Exception: Check-in failed: " prefix first
+    String cleanStr = rawMessage
+        .replaceAll("Exception: Check-in failed: ", "")
+        .replaceAll("Exception: Check-out failed: ", "")
+        .replaceAll("Exception: ", "");
+
+    try {
+      // Only try to parse if it looks like JSON
+      if (cleanStr.trim().startsWith("{")) {
+        final Map<String, dynamic> errorJson = jsonDecode(cleanStr);
+        if (errorJson.containsKey('message')) {
+          displayMessage = errorJson['message'];
+        }
+      } else {
+        displayMessage = cleanStr;
+      }
+    } catch (_) {
+      displayMessage = cleanStr;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(Icons.location_off, color: Colors.red, size: 28),
+            SizedBox(width: 10),
+            Text("Location Alert"),
+          ],
+        ),
+        content: Text(displayMessage, style: const TextStyle(fontSize: 16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(
+              "OK",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
               ),
             ),
           ),

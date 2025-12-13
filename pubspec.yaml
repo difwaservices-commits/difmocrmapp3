@@ -47,6 +47,9 @@ dependencies:
   shared_preferences: ^2.2.2
   flutter_riverpod: ^3.0.3
 
+dependency_overrides:
+  google_api_headers: ^5.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
