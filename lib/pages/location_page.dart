@@ -8,7 +8,8 @@ import 'package:google_maps_webservice/places.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_application_difmo/services/api_provider.dart';
 
-const kGoogleApiKey = "YOUR_GOOGLE_MAPS_API_KEY"; // 🔑 Replace with your key
+const kGoogleApiKey =
+    "AIzaSyClF12i0eHy7Nrig6EYu8Z4U5DA2zC09OI"; // 🔑 Replace with your key
 final GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: kGoogleApiKey);
 
 class LocationConfirmPage extends ConsumerStatefulWidget {
@@ -39,6 +40,13 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
   void initState() {
     super.initState();
     _determinePosition();
+  }
+
+  @override
+  void dispose() {
+    mapController?.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 
   /// 🧭 Get user location

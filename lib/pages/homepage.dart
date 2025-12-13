@@ -38,7 +38,7 @@ class _DashboardPageState extends State<DashboardPage> {
       if (userStr != null) {
         final user = jsonDecode(userStr);
         final userId = user['id'];
-        
+
         // Get employee record
         final employees = await ApiService.getEmployees(userId: userId);
         if (employees.isNotEmpty) {
@@ -49,18 +49,19 @@ class _DashboardPageState extends State<DashboardPage> {
 
           // Get today's attendance
           final attendance = await ApiService.getTodayAttendance(employeeId!);
-          
+
           if (attendance != null) {
-             if (attendance['checkOutTime'] != null) {
-               setState(() {
-                 attendanceStatus = "Completed";
-               });
-             } else {
-               setState(() {
-                 attendanceStatus = "Clock-Out";
-                 attendanceId = attendance['id'];
-               });
-             }
+            if (attendance['checkOutTime'] != null) {
+              setState(() {
+                attendanceStatus = "Completed";
+                attendanceId = attendance['id'];
+              });
+            } else {
+              setState(() {
+                attendanceStatus = "Clock-Out";
+                attendanceId = attendance['id'];
+              });
+            }
           } else {
             setState(() {
               attendanceStatus = "Clock-In";
@@ -164,10 +165,16 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                             const SizedBox(height: 15),
                             GestureDetector(
-                              onTap: () => {
+                              onTap: () {
+                                if (attendanceStatus == "Completed") {
+                                  showSnack(
+                                    "You have already checked out for today.",
+                                  );
+                                  return;
+                                }
                                 setState(() {
                                   isPopUpVisible = !isPopUpVisible;
-                                }),
+                                });
                               },
                               child: Container(
                                 padding: const EdgeInsets.all(25),
