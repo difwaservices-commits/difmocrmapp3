@@ -232,8 +232,18 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getAttendanceHistory(String employeeId) async {
-    final url = Uri.parse('$baseUrl/attendance?employeeId=$employeeId');
+  static Future<List<dynamic>> getAttendanceHistory(
+    String employeeId, {
+    String? startDate,
+    String? endDate,
+    String? status,
+  }) async {
+    String queryString = 'employeeId=$employeeId';
+    if (startDate != null) queryString += '&startDate=$startDate';
+    if (endDate != null) queryString += '&endDate=$endDate';
+    if (status != null && status != 'all') queryString += '&status=$status';
+
+    final url = Uri.parse('$baseUrl/attendance?$queryString');
     final headers = await _getHeaders();
 
     _logRequest('GET', url, headers: headers);
@@ -246,10 +256,12 @@ class ApiService {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         var innerData = responseData['data'];
-        
+
         if (innerData is List) return innerData;
-        if (innerData is Map && innerData.containsKey('data') && innerData['data'] is List) {
-           return innerData['data'];
+        if (innerData is Map &&
+            innerData.containsKey('data') &&
+            innerData['data'] is List) {
+          return innerData['data'];
         }
         return [];
       } else {

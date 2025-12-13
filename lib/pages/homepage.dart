@@ -5,6 +5,8 @@ import 'package:flutter_application_difmo/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:flutter_application_difmo/pages/auth_screens/login_screen.dart';
+import 'package:flutter_application_difmo/pages/attendance_history_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -155,6 +157,17 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -215,10 +228,10 @@ class _DashboardPageState extends State<DashboardPage> {
                           const Spacer(),
                           IconButton(
                             icon: const Icon(
-                              Iconsax.notification,
+                              Iconsax.logout,
                               color: Colors.white,
                             ),
-                            onPressed: () => showSnack("Notification clicked"),
+                            onPressed: _logout,
                           ),
                         ],
                       ),
@@ -355,12 +368,33 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "Your Activity",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Your Activity",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              if (employeeId != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AttendanceHistoryPage(
+                                      employeeId: employeeId!,
+                                      userName: userName,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: const Text("View All"),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 10),
                       if (activityHistory.isEmpty)
