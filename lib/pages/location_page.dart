@@ -4,12 +4,13 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:google_maps_webservice/places.dart';
-import 'package:flutter_application_difmo/services/api_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_application_difmo/services/api_provider.dart';
 
 const kGoogleApiKey = "YOUR_GOOGLE_MAPS_API_KEY"; // 🔑 Replace with your key
 final GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: kGoogleApiKey);
 
-class LocationConfirmPage extends StatefulWidget {
+class LocationConfirmPage extends ConsumerStatefulWidget {
   final bool isCheckIn;
   final String? employeeId;
   final String? attendanceId;
@@ -22,10 +23,11 @@ class LocationConfirmPage extends StatefulWidget {
   });
 
   @override
-  State<LocationConfirmPage> createState() => _LocationConfirmPageState();
+  ConsumerState<LocationConfirmPage> createState() =>
+      _LocationConfirmPageState();
 }
 
-class _LocationConfirmPageState extends State<LocationConfirmPage> {
+class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
   GoogleMapController? mapController;
   LatLng? currentPosition;
   String address = "Fetching address...";
@@ -63,6 +65,8 @@ class _LocationConfirmPageState extends State<LocationConfirmPage> {
       desiredAccuracy: LocationAccuracy.high,
     );
 
+    if (!mounted) return;
+
     setState(() {
       currentPosition = LatLng(position.latitude, position.longitude);
       accuracy = position.accuracy;
@@ -73,15 +77,23 @@ class _LocationConfirmPageState extends State<LocationConfirmPage> {
 
   /// 📍 Convert LatLng to Address
   Future<void> _getAddressFromLatLng(Position position) async {
-    List<Placemark> placemarks = await placemarkFromCoordinates(
-      position.latitude,
-      position.longitude,
-    );
-    Placemark place = placemarks[0];
-    setState(() {
-      address =
-          "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.postalCode}";
-    });
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      Placemark place = placemarks[0];
+      if (!mounted) return;
+      setState(() {
+        address =
+            "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.postalCode}";
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        address = "Address not found";
+      });
+    }
   }
 
   /// 🔁 Refresh button
@@ -90,63 +102,67 @@ class _LocationConfirmPageState extends State<LocationConfirmPage> {
   }
 
   /// ✅ Confirm button
-  /// ✅ Confirm button
   Future<void> _confirmLocation() async {
-    if (currentPosition == null) return;
+    print(
+      "DEBUG: Confirm clicked. isCheckIn: ${widget.isCheckIn}, EmployeeID: ${widget.employeeId}, AttendanceID: ${widget.attendanceId}",
+    );
 
-    try {
-      if (widget.isCheckIn) {
-        if (widget.employeeId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Error: Employee ID not found")),
-          );
-          return;
-        }
-        await ApiService.checkIn(
-          widget.employeeId!,
-          currentPosition!.latitude,
-          currentPosition!.longitude,
-          address,
-          "", // notes
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Checked In Successfully!")),
-          );
-          Navigator.pop(context); // Close location page
-          // Navigator.pop(context); // Close popup (already closed in previous screen but good to be safe if flow changes)
-        }
-      } else {
-        if (widget.attendanceId == null) {
-           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Error: Attendance ID not found")),
-          );
-          return;
-        }
-        await ApiService.checkOut(
-          widget.attendanceId!,
-          currentPosition!.latitude,
-          currentPosition!.longitude,
-          "", // notes
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Checked Out Successfully!")),
-          );
-          Navigator.pop(context);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+    if (currentPosition == null) {
+      print("DEBUG: currentPosition is null");
+      return;
+    }
+
+    if (widget.isCheckIn) {
+      if (widget.employeeId == null) {
+        print("DEBUG: EmployeeID is null");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e")),
+          const SnackBar(content: Text("Error: Employee ID not found")),
         );
+        return;
       }
+      print("DEBUG: Calling checkIn...");
+      await ref
+          .read(locationActionProvider.notifier)
+          .checkIn(
+            widget.employeeId!,
+            currentPosition!.latitude,
+            currentPosition!.longitude,
+            address,
+            "", // notes
+          );
+      print("DEBUG: checkIn called");
+    } else {
+      if (widget.attendanceId == null) {
+        print("DEBUG: AttendanceID is null");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error: Attendance ID not found")),
+        );
+        return;
+      }
+      print("DEBUG: Calling checkOut...");
+      await ref
+          .read(locationActionProvider.notifier)
+          .checkOut(
+            widget.attendanceId!,
+            currentPosition!.latitude,
+            currentPosition!.longitude,
+            "", // notes
+          );
+      print("DEBUG: checkOut called");
     }
   }
 
-  /// 🔍 Search for places using Google Places API
   Future<void> _handleSearch() async {
+    if (kGoogleApiKey.contains("YOUR_")) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Please configure Google Maps API Key in location_page.dart",
+          ),
+        ),
+      );
+      return;
+    }
     Prediction? p = await PlacesAutocomplete.show(
       context: context,
       apiKey: kGoogleApiKey,
@@ -156,6 +172,7 @@ class _LocationConfirmPageState extends State<LocationConfirmPage> {
     );
 
     if (p != null) {
+      if (!mounted) return;
       PlacesDetailsResponse detail = await _places.getDetailsByPlaceId(
         p.placeId!,
       );
@@ -177,6 +194,23 @@ class _LocationConfirmPageState extends State<LocationConfirmPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to provider changes for SnackBar feedback and Navigation
+    ref.listen<ApiState>(locationActionProvider, (previous, next) {
+      if (next.status == ApiStatus.success) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.message ?? "Success")));
+        Navigator.pop(context);
+      } else if (next.status == ApiStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.message ?? "An error occurred")),
+        );
+      }
+    });
+
+    final apiState = ref.watch(locationActionProvider);
+    final isLoading = apiState.status == ApiStatus.loading;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -263,18 +297,31 @@ class _LocationConfirmPageState extends State<LocationConfirmPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       ElevatedButton(
-                        onPressed: _refreshLocation,
+                        onPressed: isLoading
+                            ? null
+                            : _refreshLocation, // Disable when loading
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
                         ),
                         child: const Text("Refresh"),
                       ),
                       ElevatedButton(
-                        onPressed: _confirmLocation,
+                        onPressed: isLoading
+                            ? null
+                            : _confirmLocation, // Disable when loading
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
                         ),
-                        child: const Text("Confirm"),
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text("Confirm"),
                       ),
                     ],
                   ),

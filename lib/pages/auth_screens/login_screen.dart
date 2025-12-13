@@ -107,10 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () async {
                       final email = _emailController.text;
                       final password = _passwordController.text;
-                      
+
                       if (email.isEmpty || password.isEmpty) {
-                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter email and password')),
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please enter email and password'),
+                          ),
                         );
                         return;
                       }
@@ -120,14 +122,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (context.mounted) {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => const DashboardPage()),
+                            MaterialPageRoute(
+                              builder: (context) => const DashboardPage(),
+                            ),
                           );
                         }
                       } catch (e) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Login failed: $e')),
+                          String errorMessage = e.toString().replaceAll(
+                            'Exception: ',
+                            '',
                           );
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(errorMessage)));
                         }
                       }
                     },
