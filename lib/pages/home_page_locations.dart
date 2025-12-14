@@ -78,11 +78,13 @@ class _LocationPopupState extends State<LocationPopup> {
     if (mounted) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => LocationConfirmPage(
-          isCheckIn: widget.isCheckIn,
-          employeeId: widget.employeeId,
-          attendanceId: widget.attendanceId,
-        )),
+        MaterialPageRoute(
+          builder: (_) => LocationConfirmPage(
+            isCheckIn: widget.isCheckIn,
+            employeeId: widget.employeeId,
+            attendanceId: widget.attendanceId,
+          ),
+        ),
       );
     }
   }
