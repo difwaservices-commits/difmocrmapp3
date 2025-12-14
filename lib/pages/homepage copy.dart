@@ -5,9 +5,6 @@ import 'package:flutter_application_difmo/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:flutter_application_difmo/pages/auth_screens/login_screen.dart';
-import 'package:flutter_application_difmo/pages/attendance_history_page.dart';
-import 'package:flutter_application_difmo/pages/onboarding_screen.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -15,7 +12,7 @@ class DashboardPage extends StatefulWidget {
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
-
+// sdf
 class _DashboardPageState extends State<DashboardPage> {
   void showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -33,7 +30,7 @@ class _DashboardPageState extends State<DashboardPage> {
   String userName = "Loading...";
   String userRole = "Employee";
   String userEmail = "";
-  // sdfsd
+// sdfsd
   // Time Info
   String clockInTime = "--:--";
   String clockOutTime = "--:--";
@@ -83,7 +80,7 @@ class _DashboardPageState extends State<DashboardPage> {
       if (userStr != null) {
         final user = jsonDecode(userStr);
         final userId = user['id'];
-
+        
         setState(() {
           userName = "${user['firstName']} ${user['lastName']}";
           userEmail = user['email'];
@@ -103,37 +100,36 @@ class _DashboardPageState extends State<DashboardPage> {
           print("RAW ATTENDANCE DATA: $attendance"); // DEBUG LOG
 
           if (attendance != null) {
-            String? date = attendance['date'];
-            String? checkInStr = attendance['checkInTime'];
-            String? checkOutStr = attendance['checkOutTime'];
+             String? date = attendance['date'];
+             String? checkInStr = attendance['checkInTime'];
+             String? checkOutStr = attendance['checkOutTime'];
+             
+             print("ID: ${attendance['id']}"); // DEBUG LOG
+             print("Date: $date, CheckIn: $checkInStr, CheckOut: $checkOutStr"); // DEBUG LOG
 
-            print("ID: ${attendance['id']}"); // DEBUG LOG
-            print(
-              "Date: $date, CheckIn: $checkInStr, CheckOut: $checkOutStr",
-            ); // DEBUG LOG
+             DateTime? checkIn = _parseUtcTime(date, checkInStr);
+             DateTime? checkOut = _parseUtcTime(date, checkOutStr);
 
-            DateTime? checkIn = _parseUtcTime(date, checkInStr);
-            DateTime? checkOut = _parseUtcTime(date, checkOutStr);
+             setState(() {
+               if (checkIn != null) {
+                 clockInTime = DateFormat('HH:mm').format(checkIn);
+               }
+               if (checkOut != null) {
+                 clockOutTime = DateFormat('HH:mm').format(checkOut);
+                 attendanceStatus = "Completed";
+                 
+                 // Calculate working hours
+                 final duration = checkOut.difference(checkIn!);
+                 final hours = duration.inHours;
+                 final minutes = duration.inMinutes.remainder(60);
+                 workingHours = "${hours}h ${minutes}m";
 
-            setState(() {
-              if (checkIn != null) {
-                clockInTime = DateFormat('HH:mm').format(checkIn);
-              }
-              if (checkOut != null) {
-                clockOutTime = DateFormat('HH:mm').format(checkOut);
-                attendanceStatus = "Completed";
-
-                // Calculate working hours
-                final duration = checkOut.difference(checkIn!);
-                final hours = duration.inHours;
-                final minutes = duration.inMinutes.remainder(60);
-                workingHours = "${hours}h ${minutes}m";
-              } else {
-                attendanceStatus = "Clock-Out";
-                attendanceId = attendance['id'];
-                print("Set attendanceId to $attendanceId"); // DEBUG LOG
-              }
-            });
+               } else {
+                 attendanceStatus = "Clock-Out";
+                 attendanceId = attendance['id'];
+                 print("Set attendanceId to $attendanceId"); // DEBUG LOG
+               }
+             });
           } else {
             setState(() {
               attendanceStatus = "Clock-In";
@@ -156,19 +152,6 @@ class _DashboardPageState extends State<DashboardPage> {
       setState(() {
         isLoading = false;
       });
-    }
-  }
-
-  Future<void> _logout() async {
-    print("User logging out..."); // Debug log
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    print("SharedPreferences cleared.");
-    if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (route) => false,
-      );
     }
   }
 
@@ -232,10 +215,10 @@ class _DashboardPageState extends State<DashboardPage> {
                           const Spacer(),
                           IconButton(
                             icon: const Icon(
-                              Iconsax.logout,
+                              Iconsax.notification,
                               color: Colors.white,
                             ),
-                            onPressed: _logout,
+                            onPressed: () => showSnack("Notification clicked"),
                           ),
                         ],
                       ),
@@ -259,19 +242,11 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                             const SizedBox(height: 15),
                             GestureDetector(
-                              onTap: () {
-                                if (attendanceStatus == "Completed") {
-                                  showSnack(
-                                    "Attendance already completed for today",
-                                  );
-                                  return;
-                                }
-
+                              onTap: () => {
                                 setState(() {
-                                  isPopUpVisible = true;
-                                });
+                                  isPopUpVisible = !isPopUpVisible;
+                                }),
                               },
-
                               child: Container(
                                 padding: const EdgeInsets.all(25),
                                 decoration: BoxDecoration(
@@ -284,21 +259,10 @@ class _DashboardPageState extends State<DashboardPage> {
                                     ),
                                   ],
                                 ),
-                                child: Opacity(
-                                  opacity: attendanceStatus == "Completed"
-                                      ? 0.5
-                                      : 1,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: const Icon(
-                                      Iconsax.finger_scan,
-                                      size: 40,
-                                      color: Colors.orange,
-                                    ),
-                                  ),
+                                child: const Icon(
+                                  Iconsax.finger_scan,
+                                  size: 40,
+                                  color: Colors.orange,
                                 ),
                               ),
                             ),
@@ -391,33 +355,12 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Your Activity",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              if (employeeId != null) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AttendanceHistoryPage(
-                                      employeeId: employeeId!,
-                                      userName: userName,
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            child: const Text("View All"),
-                          ),
-                        ],
+                      const Text(
+                        "Your Activity",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       if (activityHistory.isEmpty)
@@ -425,28 +368,22 @@ class _DashboardPageState extends State<DashboardPage> {
                       else
                         ...activityHistory.take(5).map((activity) {
                           final date = activity['date'];
-                          final checkIn = _parseUtcTime(
-                            date,
-                            activity['checkInTime'],
-                          );
-                          final checkOut = _parseUtcTime(
-                            date,
-                            activity['checkOutTime'],
-                          );
-
+                          final checkIn = _parseUtcTime(date, activity['checkInTime']);
+                          final checkOut = _parseUtcTime(date, activity['checkOutTime']);
+                          
                           return Column(
                             children: [
                               if (checkIn != null)
                                 activityItem(
-                                  "Clock-In",
-                                  DateFormat('dd MMMM yyyy').format(checkIn),
-                                  DateFormat('HH:mm').format(checkIn),
+                                  "Clock-In", 
+                                  DateFormat('dd MMMM yyyy').format(checkIn), 
+                                  DateFormat('HH:mm').format(checkIn)
                                 ),
                               if (checkOut != null)
                                 activityItem(
-                                  "Clock-Out",
-                                  DateFormat('dd MMMM yyyy').format(checkOut),
-                                  DateFormat('HH:mm').format(checkOut),
+                                  "Clock-Out", 
+                                  DateFormat('dd MMMM yyyy').format(checkOut), 
+                                  DateFormat('HH:mm').format(checkOut)
                                 ),
                             ],
                           );
