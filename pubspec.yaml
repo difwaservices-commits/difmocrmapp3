@@ -37,6 +37,7 @@ dependencies:
   google_maps_webservice: ^0.0.20-nullsafety.5
   flutter_google_places: ^0.3.0
   geolocator: ^14.0.1
+  geolocator_linux: ^0.2.1
   geocoding: ^4.0.0
   google_maps_flutter: ^2.13.1
   iconsax: ^0.0.8
@@ -50,6 +51,7 @@ dependencies:
 
 dependency_overrides:
   google_api_headers: ^5.0.0
+  package_info_plus: ^9.0.0
 
 dev_dependencies:
   flutter_test:
