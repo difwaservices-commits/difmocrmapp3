@@ -20,7 +20,7 @@ class AttendanceHistoryPage extends StatefulWidget {
 class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
   bool isLoading = true;
   List<dynamic> attendanceList = [];
-  
+
   // Filters
   DateTime selectedMonth = DateTime.now();
   String selectedStatus = 'all';
@@ -63,9 +63,9 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
         attendanceList = data;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching history: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error fetching history: $e')));
     } finally {
       setState(() {
         isLoading = false;
@@ -79,12 +79,15 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
       initialDate: selectedMonth,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      initialDatePickerMode: DatePickerMode.year, // Start with year selection if possible, but standard is fine
+      initialDatePickerMode: DatePickerMode
+          .year, // Start with year selection if possible, but standard is fine
       helpText: 'Select Month',
     );
-    
+
     // Note: Standard date picker picks a day. We'll just use the month/year from it.
-    if (picked != null && (picked.month != selectedMonth.month || picked.year != selectedMonth.year)) {
+    if (picked != null &&
+        (picked.month != selectedMonth.month ||
+            picked.year != selectedMonth.year)) {
       setState(() {
         selectedMonth = picked;
       });
@@ -96,8 +99,8 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
     if (dateStr == null || timeStr == null) return null;
     try {
       final datePart = dateStr.contains('T') ? dateStr.split('T')[0] : dateStr;
-      final isoStr = "${datePart}T${timeStr}Z";
-      return DateTime.parse(isoStr).toLocal();
+      final isoStr = "${datePart}T$timeStr";
+      return DateTime.parse(isoStr);
     } catch (e) {
       return null;
     }
@@ -128,7 +131,10 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                       child: InkWell(
                         onTap: () => _selectMonth(context),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey.shade300),
                             borderRadius: BorderRadius.circular(8),
@@ -139,9 +145,15 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                             children: [
                               Text(
                                 DateFormat('MMMM yyyy').format(selectedMonth),
-                                style: const TextStyle(fontWeight: FontWeight.w500),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                              const Icon(Iconsax.calendar_1, size: 18, color: Colors.grey),
+                              const Icon(
+                                Iconsax.calendar_1,
+                                size: 18,
+                                color: Colors.grey,
+                              ),
                             ],
                           ),
                         ),
@@ -161,7 +173,11 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
                           child: DropdownButton<String>(
                             value: selectedStatus,
                             isExpanded: true,
-                            icon: const Icon(Iconsax.arrow_down_1, size: 18, color: Colors.grey),
+                            icon: const Icon(
+                              Iconsax.arrow_down_1,
+                              size: 18,
+                              color: Colors.grey,
+                            ),
                             items: statusOptions.map((status) {
                               return DropdownMenuItem(
                                 value: status['value'],
@@ -194,116 +210,148 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : attendanceList.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Iconsax.calendar_remove, size: 60, color: Colors.grey[300]),
-                            const SizedBox(height: 16),
-                            Text(
-                              "No attendance records found",
-                              style: TextStyle(color: Colors.grey[500]),
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Iconsax.calendar_remove,
+                          size: 60,
+                          color: Colors.grey[300],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No attendance records found",
+                          style: TextStyle(color: Colors.grey[500]),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: attendanceList.length,
+                    itemBuilder: (context, index) {
+                      final item = attendanceList[index];
+                      final date = item['date'];
+                      final checkIn = _parseUtcTime(date, item['checkInTime']);
+                      final checkOut = _parseUtcTime(
+                        date,
+                        item['checkOutTime'],
+                      );
+                      final status =
+                          item['status'] ?? 'Present'; // Default or from API
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: attendanceList.length,
-                        itemBuilder: (context, index) {
-                          final item = attendanceList[index];
-                          final date = item['date'];
-                          final checkIn = _parseUtcTime(date, item['checkInTime']);
-                          final checkOut = _parseUtcTime(date, item['checkOutTime']);
-                          final status = item['status'] ?? 'Present'; // Default or from API
-
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade200),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.02),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      DateFormat('EEEE, dd MMM').format(DateTime.parse(date)),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: _getStatusColor(status).withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        status.toString().toUpperCase(),
-                                        style: TextStyle(
-                                          color: _getStatusColor(status),
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  DateFormat(
+                                    'EEEE, dd MMM',
+                                  ).format(DateTime.parse(date)),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
                                 ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildTimeColumn(
-                                        "Check In",
-                                        checkIn != null ? DateFormat('HH:mm').format(checkIn) : "--:--",
-                                        Iconsax.login,
-                                        Colors.green,
-                                      ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _getStatusColor(
+                                      status,
+                                    ).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    status.toString().toUpperCase(),
+                                    style: TextStyle(
+                                      color: _getStatusColor(status),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    Container(width: 1, height: 30, color: Colors.grey.shade200),
-                                    Expanded(
-                                      child: _buildTimeColumn(
-                                        "Check Out",
-                                        checkOut != null ? DateFormat('HH:mm').format(checkOut) : "--:--",
-                                        Iconsax.logout,
-                                        Colors.orange,
-                                      ),
-                                    ),
-                                    Container(width: 1, height: 30, color: Colors.grey.shade200),
-                                    Expanded(
-                                      child: _buildTimeColumn(
-                                        "Hrs",
-                                        _calculateHours(checkIn, checkOut),
-                                        Iconsax.clock,
-                                        Colors.blue,
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ],
                             ),
-                          );
-                        },
-                      ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTimeColumn(
+                                    "Check In",
+                                    checkIn != null
+                                        ? DateFormat('hh:mm a').format(checkIn)
+                                        : "--:--",
+                                    Iconsax.login,
+                                    Colors.green,
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 30,
+                                  color: Colors.grey.shade200,
+                                ),
+                                Expanded(
+                                  child: _buildTimeColumn(
+                                    "Check Out",
+                                    checkOut != null
+                                        ? DateFormat('hh:mm a').format(checkOut)
+                                        : "--:--",
+                                    Iconsax.logout,
+                                    Colors.orange,
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 30,
+                                  color: Colors.grey.shade200,
+                                ),
+                                Expanded(
+                                  child: _buildTimeColumn(
+                                    "Hrs",
+                                    _calculateHours(checkIn, checkOut),
+                                    Iconsax.clock,
+                                    Colors.blue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTimeColumn(String label, String time, IconData icon, Color color) {
+  Widget _buildTimeColumn(
+    String label,
+    String time,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       children: [
         Row(
@@ -320,10 +368,7 @@ class _AttendanceHistoryPageState extends State<AttendanceHistoryPage> {
         const SizedBox(height: 4),
         Text(
           time,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ],
     );

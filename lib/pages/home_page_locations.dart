@@ -73,10 +73,9 @@ class _LocationPopupState extends State<LocationPopup> {
     );
 
     widget.onPermissionGranted?.call(position);
-    widget.onClose(); // Hide popup
 
     if (mounted) {
-      Navigator.push(
+      await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => LocationConfirmPage(
@@ -86,6 +85,8 @@ class _LocationPopupState extends State<LocationPopup> {
           ),
         ),
       );
+
+      widget.onClose(); // Hide popup and refresh dashboard after returning
     }
   }
 

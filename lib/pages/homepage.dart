@@ -4,10 +4,13 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_application_difmo/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:flutter_application_difmo/pages/auth_screens/login_screen.dart';
 import 'package:flutter_application_difmo/pages/attendance_history_page.dart';
 import 'package:flutter_application_difmo/pages/onboarding_screen.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:flutter_application_difmo/pages/location_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -43,20 +46,32 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // Activity History
   List<dynamic> activityHistory = [];
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _updateDateTime();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _updateDateTime();
+    });
     _fetchAttendanceStatus();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   void _updateDateTime() {
     final now = DateTime.now();
-    setState(() {
-      currentDate = DateFormat('EEEE, dd MMMM').format(now);
-      currentTime = DateFormat('HH:mm').format(now);
-    });
+    if (mounted) {
+      setState(() {
+        currentDate = DateFormat('EEEE, dd MMMM').format(now);
+        currentTime = DateFormat('hh:mm:ss a').format(now);
+      });
+    }
   }
 
   DateTime? _parseUtcTime(String? dateStr, String? timeStr) {
@@ -65,9 +80,9 @@ class _DashboardPageState extends State<DashboardPage> {
     try {
       // Ensure date is YYYY-MM-DD
       final datePart = dateStr.contains('T') ? dateStr.split('T')[0] : dateStr;
-      // Construct ISO UTC string
-      final isoStr = "${datePart}T${timeStr}Z";
-      final dt = DateTime.parse(isoStr).toLocal();
+      // Construct ISO string (Treat as local)
+      final isoStr = "${datePart}T$timeStr";
+      final dt = DateTime.parse(isoStr);
       // debugPrint("Parsed $isoStr to $dt");
       return dt;
     } catch (e) {
@@ -117,10 +132,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
             setState(() {
               if (checkIn != null) {
-                clockInTime = DateFormat('HH:mm').format(checkIn);
+                clockInTime = DateFormat('hh:mm a').format(checkIn);
               }
               if (checkOut != null) {
-                clockOutTime = DateFormat('HH:mm').format(checkOut);
+                clockOutTime = DateFormat('hh:mm a').format(checkOut);
                 attendanceStatus = "Completed";
 
                 // Calculate working hours
@@ -259,7 +274,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                             const SizedBox(height: 15),
                             GestureDetector(
-                              onTap: () {
+                              onTap: () async {
                                 if (attendanceStatus == "Completed") {
                                   showSnack(
                                     "Attendance already completed for today",
@@ -267,9 +282,31 @@ class _DashboardPageState extends State<DashboardPage> {
                                   return;
                                 }
 
-                                setState(() {
-                                  isPopUpVisible = true;
-                                });
+                                final permission =
+                                    await Geolocator.checkPermission();
+                                if (permission ==
+                                        LocationPermission.whileInUse ||
+                                    permission == LocationPermission.always) {
+                                  // Directly navigate
+                                  if (context.mounted) {
+                                    await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => LocationConfirmPage(
+                                          isCheckIn:
+                                              attendanceStatus == "Clock-In",
+                                          employeeId: employeeId,
+                                          attendanceId: attendanceId,
+                                        ),
+                                      ),
+                                    );
+                                    _fetchAttendanceStatus();
+                                  }
+                                } else {
+                                  setState(() {
+                                    isPopUpVisible = true;
+                                  });
+                                }
                               },
 
                               child: Container(
@@ -440,13 +477,13 @@ class _DashboardPageState extends State<DashboardPage> {
                                 activityItem(
                                   "Clock-In",
                                   DateFormat('dd MMMM yyyy').format(checkIn),
-                                  DateFormat('HH:mm').format(checkIn),
+                                  DateFormat('hh:mm a').format(checkIn),
                                 ),
                               if (checkOut != null)
                                 activityItem(
                                   "Clock-Out",
                                   DateFormat('dd MMMM yyyy').format(checkOut),
-                                  DateFormat('HH:mm').format(checkOut),
+                                  DateFormat('hh:mm a').format(checkOut),
                                 ),
                             ],
                           );
