@@ -7,7 +7,7 @@ class ActivateAccountPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF0E6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -33,7 +33,7 @@ class ActivateAccountPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       const Text(
-                        'Distro Studio',
+                        'Difmo CRM',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -105,7 +105,7 @@ class ActivateAccountPage extends StatelessWidget {
                               );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
+                              backgroundColor: Theme.of(context).primaryColor,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -126,14 +126,14 @@ class ActivateAccountPage extends StatelessWidget {
                         onTap: () {
                           // Handle chat support
                         },
-                        child: const Text.rich(
+                        child: Text.rich(
                           TextSpan(
                             text: 'Having issues with the activation? ',
                             children: [
                               TextSpan(
                                 text: 'Chat Us',
                                 style: TextStyle(
-                                  color: Colors.orange,
+                                  color: Theme.of(context).primaryColor,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

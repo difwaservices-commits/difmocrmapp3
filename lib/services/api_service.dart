@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_application_difmo/main.dart';
+import 'package:flutter_application_difmo/pages/auth_screens/login_screen.dart';
 
 class ApiService {
   // Use 10.0.2.2 for Android emulator to access host localhost
@@ -102,6 +105,19 @@ class ApiService {
     }
   }
 
+  static Future<void> _handleUnauthorized(http.Response response) async {
+    if (response.statusCode == 401) {
+      print('⚠️ [AUTH] 401 Unauthorized - Logging out...');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   static Future<Map<String, dynamic>> checkIn(
     String employeeId,
     double latitude,
@@ -125,6 +141,7 @@ class ApiService {
       final response = await http.post(url, headers: headers, body: body);
 
       _logResponse('POST', url, response);
+      await _handleUnauthorized(response);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body);
@@ -158,6 +175,7 @@ class ApiService {
       final response = await http.post(url, headers: headers, body: body);
 
       _logResponse('POST', url, response);
+      await _handleUnauthorized(response);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body);
@@ -182,13 +200,15 @@ class ApiService {
       final response = await http.get(url, headers: headers);
 
       _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         var innerData = responseData['data'];
 
         // Handle nested response structure: {"data": {"data": ...}}
-        if (innerData is Map<String, dynamic> && innerData.containsKey('data')) {
+        if (innerData is Map<String, dynamic> &&
+            innerData.containsKey('data')) {
           return innerData['data'];
         }
 
@@ -217,6 +237,7 @@ class ApiService {
       final response = await http.get(url, headers: headers);
 
       _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -252,6 +273,7 @@ class ApiService {
       final response = await http.get(url, headers: headers);
 
       _logResponse('GET', url, response);
+      await _handleUnauthorized(response);
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);

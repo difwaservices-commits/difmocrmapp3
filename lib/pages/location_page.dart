@@ -308,7 +308,7 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
                             ? null
                             : _refreshLocation, // Disable when loading
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
+                          backgroundColor: Theme.of(context).primaryColor,
                         ),
                         child: const Text("Refresh"),
                       ),
@@ -317,7 +317,7 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
                             ? null
                             : _confirmLocation, // Disable when loading
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
+                          backgroundColor: Theme.of(context).primaryColor,
                         ),
                         child: isLoading
                             ? const SizedBox(
@@ -370,22 +370,26 @@ class _LocationConfirmPageState extends ConsumerState<LocationConfirmPage> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
-          children: const [
-            Icon(Icons.location_off, color: Colors.red, size: 28),
-            SizedBox(width: 10),
-            Text("Location Alert"),
+          children: [
+            Icon(
+              Icons.location_off,
+              color: Theme.of(context).primaryColor,
+              size: 28,
+            ),
+            const SizedBox(width: 10),
+            const Text("Location Alert"),
           ],
         ),
         content: Text(displayMessage, style: const TextStyle(fontSize: 16)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text(
+            child: Text(
               "OK",
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.orange,
+                color: Theme.of(context).primaryColor,
               ),
             ),
           ),

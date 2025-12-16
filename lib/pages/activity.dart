@@ -41,21 +41,22 @@ class ActivityPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        elevation: 0.5,
-        backgroundColor: Colors.white,
+        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
         centerTitle: true,
         title: const Text(
           'Your Activity',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () {},
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.black),
+            icon: const Icon(Icons.notifications_none, color: Colors.white),
             onPressed: () {},
           ),
         ],
@@ -167,11 +168,13 @@ class ActivityCard extends StatelessWidget {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: isClockIn
-                    ? Colors.orange[100]
-                    : Colors.pink[100],
+                    ? Theme.of(context).primaryColor.withOpacity(0.1)
+                    : Colors.pink[50],
                 child: Icon(
                   isClockIn ? Icons.login : Icons.logout,
-                  color: isClockIn ? Colors.orange : Colors.pink,
+                  color: isClockIn
+                      ? Theme.of(context).primaryColor
+                      : Colors.pink,
                   size: 20,
                 ),
               ),

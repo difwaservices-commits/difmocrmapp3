@@ -15,11 +15,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   final List<Map<String, String>> onboardingData = [
-    {
-      'image': 'assets/images/logo.png',
-      'title': 'Seamless Design',
-      'desc': 'Simplify your HR processes with flexibility.',
-    },
+    // {
+    //   'image': 'assets/images/logo.png',
+    //   'title': 'Seamless Design',
+    //   'desc': 'Simplify your HR processes with flexibility.',
+    // },
     {
       'image': 'assets/images/logo2.png',
       'title': 'Boost Productivity',
@@ -35,16 +35,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'title': 'Stay Notified',
       'desc': 'Get real-time updates and alerts.',
     },
-    {
-      'image': 'assets/images/logo.png',
-      'title': 'Collaborate Easily',
-      'desc': 'Work together with your team seamlessly.',
-    },
-    {
-      'image': 'assets/images/logo.png',
-      'title': 'Let’s Get Started',
-      'desc': 'Login and elevate your employee experience.',
-    },
+    // {
+    //   'image': 'assets/images/logo.png',
+    //   'title': 'Collaborate Easily',
+    //   'desc': 'Work together with your team seamlessly.',
+    // },
+    // {
+    //   'image': 'assets/images/logo.png',
+    //   'title': 'Let’s Get Started',
+    //   'desc': 'Login and elevate your employee experience.',
+    // },
   ];
 
   void _nextPage() {
@@ -74,7 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFEDE3),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -86,14 +86,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   TextButton.icon(
                     onPressed: _skip,
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_forward_ios,
                       size: 14,
-                      color: Colors.black,
+                      color: Theme.of(context).primaryColor,
                     ),
-                    label: const Text(
+                    label: Text(
                       "Skip",
-                      style: TextStyle(color: Colors.black, fontSize: 16),
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],
@@ -124,9 +127,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           horizontal: 25,
                           vertical: 20,
                         ),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.only(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(30),
                             topRight: Radius.circular(30),
                           ),
@@ -137,19 +140,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             Text(
                               data['title']!,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.black,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.titleLarge?.color,
                               ),
                             ),
                             const SizedBox(height: 10),
                             Text(
                               data['desc']!,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.black54,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.color,
                                 height: 1.4,
                               ),
                             ),
@@ -168,8 +175,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   width: _currentPage == dotIndex ? 25 : 8,
                                   decoration: BoxDecoration(
                                     color: _currentPage == dotIndex
-                                        ? Colors.orange
-                                        : Colors.orange.withOpacity(0.3),
+                                        ? Theme.of(context).primaryColor
+                                        : Theme.of(
+                                            context,
+                                          ).primaryColor.withOpacity(0.3),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
@@ -182,7 +191,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               width: double.infinity,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).primaryColor,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),

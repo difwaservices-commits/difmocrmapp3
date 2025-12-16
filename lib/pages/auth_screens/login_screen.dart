@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFE7D6), // Soft peach background
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -35,10 +35,10 @@ class _LoginScreenState extends State<LoginScreen> {
             Center(
               child: Column(
                 children: [
-                  Image.asset('assets/images/logo.png', height: 100),
+                  Image.asset('assets/images/logo.png', height: 70),
                   const SizedBox(height: 10),
                   const Text(
-                    'Distro Studio',
+                    'Difmo CRM',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -86,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       hintText: 'Password',
                       filled: true,
                       fillColor: Colors.grey.shade200,
-                      suffixIcon: Icon(Icons.visibility),
+                      suffixIcon: const Icon(Icons.visibility),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
@@ -153,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
                           },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                      backgroundColor: Theme.of(context).primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -191,12 +191,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.orange),
+                      side: BorderSide(color: Theme.of(context).primaryColor),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Activate Now',
-                      style: TextStyle(color: Colors.orange),
+                      style: TextStyle(color: Theme.of(context).primaryColor),
                     ),
                   ),
                   const SizedBox(height: 20),

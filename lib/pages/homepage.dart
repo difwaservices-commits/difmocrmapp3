@@ -201,7 +201,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xFFFF6B00), Color(0xFFFF914D)],
+                      colors: [
+                        Color(0xFF36617E),
+                        Color(0xFF5386A4),
+                      ], // Primary to Lighter variant
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -333,7 +336,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                     child: const Icon(
                                       Iconsax.finger_scan,
                                       size: 40,
-                                      color: Colors.orange,
+                                      color: Color(0xFF36617E),
                                     ),
                                   ),
                                 ),
@@ -535,11 +538,11 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFE5D0),
-                borderRadius: BorderRadius.all(Radius.circular(8)),
+              decoration: BoxDecoration(
+                color: const Color(0xFF36617E).withOpacity(0.1),
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
-              child: const Icon(Iconsax.clock, color: Colors.orange),
+              child: const Icon(Iconsax.clock, color: Color(0xFF36617E)),
             ),
             const SizedBox(width: 10),
             Column(
@@ -616,10 +619,10 @@ class ActionIcon extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
+              color: const Color(0xFF36617E).withOpacity(0.1), // Primary Light
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(icon, color: Colors.orange, size: 25),
+            child: Icon(icon, color: const Color(0xFF36617E), size: 25),
           ),
           const SizedBox(height: 6),
           Text(

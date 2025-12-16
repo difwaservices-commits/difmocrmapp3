@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final GoogleMapsFlutterPlatform mapsImplementation =
@@ -30,25 +32,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Difmo CRM',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0D47A1), // Modern Tech Blue
+          seedColor: const Color(0xFF36617E), // New Requested Primary
           secondary: Colors.white,
           surface: Colors.grey[50], // Light clean background
         ),
         scaffoldBackgroundColor: Colors.grey[50],
         textTheme: GoogleFonts.poppinsTextTheme(),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0D47A1),
+          backgroundColor: Color(0xFF36617E),
           foregroundColor: Colors.white,
           elevation: 0,
           centerTitle: true,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF0D47A1),
+            backgroundColor: const Color(0xFF36617E),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape: RoundedRectangleBorder(
@@ -78,7 +81,7 @@ class MyApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF0D47A1), width: 2),
+            borderSide: const BorderSide(color: Color(0xFF36617E), width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
